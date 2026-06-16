@@ -1,0 +1,13 @@
+# Opt-in development overlay (NOT auto-loaded): builds the `dev` target and bind-mounts the source
+# so `tsx watch` hot-reloads. node_modules is NOT mounted, so the container keeps its own build
+# (correct native ABI). Enable it explicitly:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+services:
+  bot:
+    build:
+      target: dev
+    command: pnpm dev
+    restart: "no"
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json

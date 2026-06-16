@@ -57,17 +57,17 @@ Run once (and whenever a command definition changes). With `DISCORD_GUILD_ID` se
 otherwise global registration can take up to an hour.
 
 ```bash
-docker compose run --rm bot pnpm deploy-commands
+docker compose run --rm --build bot node dist/deploy-commands.js
 ```
 
 ## Running
 
 ```bash
-# Development (hot reload via tsx watch)
+# Run the bot (production image)
 docker compose up --build
 
-# Production-like (built image, no source mount)
-docker compose -f docker-compose.yml up --build -d
+# Development with hot reload (tsx watch) — opt-in overlay
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
 ## Development without Docker

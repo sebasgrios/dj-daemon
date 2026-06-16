@@ -7,7 +7,11 @@
 FROM node:22-bookworm-slim AS base
 ENV PNPM_HOME=/pnpm
 ENV PATH=$PNPM_HOME:$PATH
-RUN corepack enable
+# Pre-install pnpm into a shared, world-readable location so neither root nor the `node` user
+# triggers an interactive corepack download at runtime.
+ENV COREPACK_HOME=/usr/local/corepack
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable && corepack prepare pnpm@11.5.3 --activate
 RUN apt-get update \
   && apt-get install -y --no-install-recommends ffmpeg python3 ca-certificates \
   && rm -rf /var/lib/apt/lists/*
