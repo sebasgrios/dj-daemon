@@ -1,0 +1,6 @@
+# Native/binary dependencies whose install scripts must run (pnpm 11 blocks them by default).
+# sodium-native ships prebuilt binaries, so it needs no entry here.
+allowBuilds:
+  '@discordjs/opus': true
+  esbuild: true
+  youtube-dl-exec: true

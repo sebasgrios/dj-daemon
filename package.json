@@ -1,38 +1,38 @@
 {
-  "name": "daemon",
-  "version": "1.0.0",
-  "description": "Just a simple Discord bot",
+  "name": "dj-daemon",
+  "version": "0.1.0",
+  "description": "Native Discord music bot built with discord.js (@discordjs/voice + yt-dlp).",
   "type": "module",
-  "main": "dist/index.ts",
+  "private": true,
+  "packageManager": "pnpm@11.5.3",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "start": "tsc && node ."
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "deploy-commands": "tsx src/deploy-commands.ts",
+    "clear-commands": "tsx src/clear-commands.ts",
+    "typecheck": "tsc --noEmit",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:deploy": "docker compose run --rm --build bot node dist/deploy-commands.js",
+    "docker:clear": "docker compose run --rm --build bot node dist/clear-commands.js"
   },
-  "contributors": [
-    {
-      "name": "Sebastián González Ríos",
-      "url": "https://www.linkedin.com/in/sgonzari"
-    },
-    {
-      "name": "Hector Escolante Enriquez",
-      "url": "https://www.linkedin.com/in/hector-escolante-enriquez/"
-    }
-  ],
-  "license": "CC-BY-NC-ND-4.0",
   "dependencies": {
-    "@discordjs/voice": "^0.16.1",
-    "discord.js": "^14.14.0",
-    "enmap": "^6.0.1",
-    "googleapis": "^135.0.0",
-    "libsodium-wrappers": "^0.7.13",
-    "prism-media": "^1.3.5",
-    "youtube-dl-exec": "^3.0.0",
-    "ytdl-core": "^4.11.5",
-    "ytdl-core-discord": "^1.3.1"
+    "@discordjs/opus": "^0.9.0",
+    "@discordjs/voice": "^0.19.2",
+    "@snazzah/davey": "^0.1.11",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.7",
+    "sodium-native": "^4.3.1",
+    "youtube-dl-exec": "^3.0.10"
   },
   "devDependencies": {
-    "@types/node": "^20.12.7",
-    "dotenv": "^16.4.5",
-    "tsx": "^4.7.2"
+    "@types/node": "^22.10.5",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
   }
 }

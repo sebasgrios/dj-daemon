@@ -1,0 +1,8 @@
+# Opt-in overlay for local voice testing on Docker Desktop (macOS/Windows). Discord's voice audio
+# travels over UDP, which the default bridge network cannot establish from Docker Desktop's VM.
+# Using the host network fixes it. Requires "Enable host networking" in Docker Desktop settings.
+# Run:
+#   docker compose -f docker-compose.yml -f docker-compose.host.yml up --build
+services:
+  bot:
+    network_mode: host
