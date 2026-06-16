@@ -45,6 +45,22 @@ export class Queue {
     this.past = [];
   }
 
+  /** Fisher-Yates shuffle of the upcoming tracks. */
+  public shuffle(): void {
+    for (let i = this.upcoming.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [this.upcoming[i], this.upcoming[j]] = [this.upcoming[j], this.upcoming[i]];
+    }
+  }
+
+  /** Removes the upcoming track at a zero-based index, returning it (or undefined if out of range). */
+  public removeAt(index: number): Track | undefined {
+    if (index < 0 || index >= this.upcoming.length) {
+      return undefined;
+    }
+    return this.upcoming.splice(index, 1)[0];
+  }
+
   public upcomingTracks(): readonly Track[] {
     return [...this.upcoming];
   }

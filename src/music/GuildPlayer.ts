@@ -12,9 +12,18 @@ import {
 import { Queue } from './Queue.js';
 import type { Track } from './Track.js';
 
+/** Loop modes: no looping, repeat the current track, or cycle the whole queue. */
+export type LoopMode = 'off' | 'track' | 'queue';
+
+/** A snapshot of playback state passed to the notifier so the panel renders accurate controls. */
+export interface PlaybackState {
+  loop: LoopMode;
+  isPaused: boolean;
+}
+
 /** Receives playback lifecycle notifications. Implemented by the UI layer to post the panel. */
 export interface PlayerNotifier {
-  onTrackStart(track: Track): void | Promise<void>;
+  onTrackStart(track: Track, state: PlaybackState): void | Promise<void>;
 }
 
 /** Outcome of the "back" control: the current track was restarted, or the previous one resumed. */
@@ -38,6 +47,11 @@ export class GuildPlayer {
   private readonly player: AudioPlayer = createAudioPlayer();
   private idleTimer: NodeJS.Timeout | null = null;
   private destroyed = false;
+  private loopMode: LoopMode = 'off';
+  /** Playback volume as a 0..1 scale applied to each resource. */
+  private volumeScale = 1;
+  /** Set right before a manual skip so the idle handler bypasses track looping for that transition. */
+  private skipping = false;
 
   public constructor(
     public readonly guildId: string,
@@ -71,6 +85,33 @@ export class GuildPlayer {
     return this.connection.joinConfig.channelId;
   }
 
+  public get loop(): LoopMode {
+    return this.loopMode;
+  }
+
+  /** Playback volume as a 0..100 percentage. */
+  public get volume(): number {
+    return Math.round(this.volumeScale * 100);
+  }
+
+  public setLoop(mode: LoopMode): void {
+    this.loopMode = mode;
+  }
+
+  /** Cycles off -> track -> queue -> off and returns the new mode. */
+  public cycleLoop(): LoopMode {
+    this.loopMode = this.loopMode === 'off' ? 'track' : this.loopMode === 'track' ? 'queue' : 'off';
+    return this.loopMode;
+  }
+
+  /** Sets volume from a 0..100 percentage, applying it immediately. Returns the clamped value. */
+  public setVolume(percent: number): number {
+    const clamped = Math.max(0, Math.min(percent, 100));
+    this.volumeScale = clamped / 100;
+    this.resource?.volume?.setVolume(this.volumeScale);
+    return clamped;
+  }
+
   /** Waits until the voice connection is ready, or throws on timeout. */
   public async waitUntilReady(): Promise<void> {
     await entersState(this.connection, VoiceConnectionStatus.Ready, CONNECTION_READY_TIMEOUT_MS);
@@ -94,6 +135,7 @@ export class GuildPlayer {
 
   /** Skips the current track; it is recorded in history by the idle handler. */
   public skip(): void {
+    this.skipping = true;
     this.player.stop(true);
   }
 
@@ -141,11 +183,16 @@ export class GuildPlayer {
     try {
       const raw = await track.stream();
       const { stream, type } = await demuxProbe(raw);
-      const resource = createAudioResource(stream, { inputType: type, metadata: track });
+      const resource = createAudioResource(stream, {
+        inputType: type,
+        inlineVolume: true,
+        metadata: track,
+      });
+      resource.volume?.setVolume(this.volumeScale);
       this.current = track;
       this.resource = resource;
       this.player.play(resource);
-      void this.notifier.onTrackStart(track);
+      void this.notifier.onTrackStart(track, { loop: this.loopMode, isPaused: false });
     } catch (error) {
       console.error(`[player:${this.guildId}] failed to start "${track.title}"`, error);
       // Drop the broken track and try the next one.
@@ -157,8 +204,20 @@ export class GuildPlayer {
     if (this.destroyed) {
       return;
     }
-    if (this.current) {
-      this.queue.pushHistory(this.current);
+    const skipping = this.skipping;
+    this.skipping = false;
+    const finished = this.current;
+    if (finished) {
+      if (this.loopMode === 'track' && !skipping) {
+        // Repeat the same track (skipping bypasses this for a single transition).
+        await this.start(finished);
+        return;
+      }
+      if (this.loopMode === 'queue') {
+        this.queue.enqueue(finished);
+      } else {
+        this.queue.pushHistory(finished);
+      }
     }
     await this.advance();
   }

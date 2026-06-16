@@ -5,11 +5,11 @@ import { buildNowPlayingEmbed, buildPanelComponents } from './panel.js';
 /** A notifier that posts a fresh now-playing panel to a text channel on every track start. */
 export function createPanelNotifier(channel: SendableChannels): PlayerNotifier {
   return {
-    async onTrackStart(track) {
+    async onTrackStart(track, state) {
       try {
         await channel.send({
           embeds: [buildNowPlayingEmbed(track)],
-          components: buildPanelComponents(),
+          components: buildPanelComponents(state),
         });
       } catch (error) {
         console.error('[panel] failed to post now-playing message', error);

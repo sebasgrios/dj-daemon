@@ -1,5 +1,5 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import type { GuildPlayer } from '../music/GuildPlayer.js';
+import type { GuildPlayer, LoopMode } from '../music/GuildPlayer.js';
 import type { Track } from '../music/Track.js';
 
 /** Stable custom ids for the control buttons; shared by the builder and the interaction router. */
@@ -9,20 +9,50 @@ export const MusicButtonId = {
   Skip: 'music:skip',
   Stop: 'music:stop',
   Queue: 'music:queue',
+  Shuffle: 'music:shuffle',
+  Loop: 'music:loop',
 } as const;
 
-const QUEUE_PREVIEW_LIMIT = 10;
+/** Visual state used to render the panel buttons accurately. */
+export interface PanelState {
+  isPaused?: boolean;
+  loop?: LoopMode;
+}
 
-function formatDuration(durationMs: number): string {
-  if (durationMs <= 0) {
-    return 'Live';
-  }
-  const totalSeconds = Math.round(durationMs / 1000);
+const QUEUE_PREVIEW_LIMIT = 10;
+const PROGRESS_BAR_SIZE = 18;
+
+function pad(value: number): string {
+  return value.toString().padStart(2, '0');
+}
+
+/** Always renders a clock (0:00, m:ss or h:mm:ss). */
+function formatClock(ms: number): string {
+  const totalSeconds = Math.max(0, Math.round(ms / 1000));
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
   const seconds = totalSeconds % 60;
-  const pad = (value: number): string => value.toString().padStart(2, '0');
   return hours > 0 ? `${hours}:${pad(minutes)}:${pad(seconds)}` : `${minutes}:${pad(seconds)}`;
+}
+
+function formatDuration(durationMs: number): string {
+  return durationMs <= 0 ? 'Live' : formatClock(durationMs);
+}
+
+const LOOP_LABEL: Record<LoopMode, string> = {
+  off: 'Off',
+  track: '🔂 Track',
+  queue: '🔁 Queue',
+};
+
+function progressBar(positionMs: number, durationMs: number): string {
+  if (durationMs <= 0) {
+    return `🔴 LIVE — \`${formatClock(positionMs)}\``;
+  }
+  const ratio = Math.max(0, Math.min(1, positionMs / durationMs));
+  const index = Math.min(PROGRESS_BAR_SIZE - 1, Math.floor(ratio * PROGRESS_BAR_SIZE));
+  const bar = `${'▬'.repeat(index)}🔘${'▬'.repeat(PROGRESS_BAR_SIZE - 1 - index)}`;
+  return `${bar}\n\`${formatClock(positionMs)} / ${formatClock(durationMs)}\``;
 }
 
 /** The now-playing panel: an embed with the track thumbnail plus the control buttons. */
@@ -45,8 +75,10 @@ export function buildNowPlayingEmbed(track: Track): EmbedBuilder {
   return embed;
 }
 
-export function buildPanelComponents(isPaused = false): ActionRowBuilder<ButtonBuilder>[] {
-  const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+export function buildPanelComponents(state: PanelState = {}): ActionRowBuilder<ButtonBuilder>[] {
+  const { isPaused = false, loop = 'off' } = state;
+
+  const transport = new ActionRowBuilder<ButtonBuilder>().addComponents(
     new ButtonBuilder()
       .setCustomId(MusicButtonId.Back)
       .setEmoji('⏮️')
@@ -68,7 +100,45 @@ export function buildPanelComponents(isPaused = false): ActionRowBuilder<ButtonB
       .setEmoji('📜')
       .setStyle(ButtonStyle.Secondary),
   );
-  return [row];
+
+  const modes = new ActionRowBuilder<ButtonBuilder>().addComponents(
+    new ButtonBuilder()
+      .setCustomId(MusicButtonId.Shuffle)
+      .setEmoji('🔀')
+      .setStyle(ButtonStyle.Secondary),
+    new ButtonBuilder()
+      .setCustomId(MusicButtonId.Loop)
+      .setEmoji(loop === 'track' ? '🔂' : '🔁')
+      .setStyle(loop === 'off' ? ButtonStyle.Secondary : ButtonStyle.Success),
+  );
+
+  return [transport, modes];
+}
+
+/** Detailed "now playing" card with a progress bar, volume and loop state (for /nowplaying). */
+export function buildNowPlayingStatusEmbed(player: GuildPlayer): EmbedBuilder {
+  const track = player.nowPlaying;
+  if (!track) {
+    return new EmbedBuilder().setTitle('Nothing is playing.');
+  }
+
+  const embed = new EmbedBuilder()
+    .setAuthor({ name: player.isPaused ? 'Paused' : 'Now playing' })
+    .setTitle(track.title)
+    .setURL(track.url || null)
+    .addFields(
+      { name: 'Progress', value: progressBar(player.playbackPositionMs, track.durationMs) },
+      { name: 'Volume', value: `${player.volume}%`, inline: true },
+      { name: 'Loop', value: LOOP_LABEL[player.loop], inline: true },
+      { name: 'In queue', value: String(player.queue.size), inline: true },
+    );
+  if (track.author) {
+    embed.setDescription(track.author);
+  }
+  if (track.thumbnail) {
+    embed.setThumbnail(track.thumbnail);
+  }
+  return embed;
 }
 
 /** Ephemeral embed shown when the "view queue" button is pressed. */

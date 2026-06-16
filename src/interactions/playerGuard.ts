@@ -37,3 +37,30 @@ export async function resolveControllablePlayer(
 
   return player;
 }
+
+/**
+ * Like {@link resolveControllablePlayer} but for read-only commands (/queue, /nowplaying): requires
+ * an active player in the guild but not that the caller is in the voice channel.
+ */
+export async function resolveActivePlayer(
+  interaction: ChatInputCommandInteraction,
+): Promise<GuildPlayer | null> {
+  if (!interaction.inCachedGuild()) {
+    await interaction.reply({
+      content: 'This can only be used in a server.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return null;
+  }
+
+  const player = musicManager.get(interaction.guildId);
+  if (!player) {
+    await interaction.reply({
+      content: 'Nothing is playing right now.',
+      flags: MessageFlags.Ephemeral,
+    });
+    return null;
+  }
+
+  return player;
+}

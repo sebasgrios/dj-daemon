@@ -30,8 +30,23 @@ export async function handleMusicButton(interaction: ButtonInteraction): Promise
         player.pause();
       }
       // Reflect the new state on the panel that was clicked.
-      await interaction.update({ components: buildPanelComponents(player.isPaused) });
+      await interaction.update({
+        components: buildPanelComponents({ isPaused: player.isPaused, loop: player.loop }),
+      });
       return;
+
+    case MusicButtonId.Shuffle:
+      player.queue.shuffle();
+      await interaction.reply({ content: '🔀 Shuffled the queue.', flags: MessageFlags.Ephemeral });
+      return;
+
+    case MusicButtonId.Loop: {
+      const loop = player.cycleLoop();
+      await interaction.update({
+        components: buildPanelComponents({ isPaused: player.isPaused, loop }),
+      });
+      return;
+    }
 
     case MusicButtonId.Stop:
       player.stop();

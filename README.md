@@ -23,14 +23,22 @@ through the official Web API, and is controlled with slash commands and an inter
 
 Every control is available both as a panel button and as a slash command:
 
-| Command            | Action                                                             |
-| ------------------ | ----------------------------------------------------------------- |
-| `/play <query>`    | Play or queue a YouTube/Spotify URL or a search.                  |
-| `/rewind`          | Restart the current track, or go to the previous one if it just started. |
-| `/skip`, `/next`   | Skip to the next track.                                           |
-| `/pause`           | Pause, or resume if already paused.                              |
-| `/queue`           | Show the current queue.                                          |
-| `/stop`            | Stop, clear the queue and leave the channel.                    |
+| Command                | Action                                                                   |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `/play <query>`        | Play or queue a YouTube/Spotify URL or a search.                         |
+| `/rewind`              | Restart the current track, or go to the previous one if it just started. |
+| `/skip`, `/next`       | Skip to the next track.                                                  |
+| `/pause`               | Pause, or resume if already paused.                                     |
+| `/nowplaying`          | Show the current track with a progress bar, volume and loop state.       |
+| `/queue`               | Show the current queue.                                                  |
+| `/loop [off\|track\|queue]` | Set the loop mode (cycles if no mode is given).                     |
+| `/volume <0-100>`      | Set the playback volume.                                                |
+| `/shuffle`             | Shuffle the queue.                                                      |
+| `/clear`               | Clear the queue without leaving.                                        |
+| `/remove <position>`   | Remove a track from the queue by position.                              |
+| `/stop`                | Stop, clear the queue and leave the channel.                            |
+
+The panel buttons mirror the transport controls plus 🔀 shuffle and 🔁 loop.
 
 ## Requirements
 
