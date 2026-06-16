@@ -1,0 +1,12 @@
+# Auto-merged by `docker compose up` for local development: builds the `dev` target and
+# bind-mounts the source so `tsx watch` hot-reloads. node_modules is NOT mounted, so the
+# container keeps its own (correct native ABI) build.
+# For a production-like run, bypass this file: `docker compose -f docker-compose.yml up --build`.
+services:
+  bot:
+    build:
+      target: dev
+    restart: "no"
+    volumes:
+      - ./src:/app/src
+      - ./tsconfig.json:/app/tsconfig.json

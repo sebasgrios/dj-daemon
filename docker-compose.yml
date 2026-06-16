@@ -1,0 +1,9 @@
+services:
+  bot:
+    build:
+      context: .
+      target: runtime
+    image: dj-daemon
+    container_name: dj-daemon
+    env_file: .env
+    restart: unless-stopped
