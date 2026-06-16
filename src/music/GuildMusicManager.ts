@@ -35,6 +35,7 @@ export class GuildMusicManager {
     try {
       await player.waitUntilReady();
     } catch (error) {
+      console.error(`[voice:${channel.guild.id}] connection did not become ready`, error);
       player.destroy();
       throw error;
     }

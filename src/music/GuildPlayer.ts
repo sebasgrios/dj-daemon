@@ -46,6 +46,10 @@ export class GuildPlayer {
     this.player.on(AudioPlayerStatus.Idle, () => void this.handleIdle());
     this.player.on('error', (error) => console.error(`[player:${this.guildId}]`, error));
     this.connection.on(VoiceConnectionStatus.Disconnected, () => void this.handleDisconnect());
+    this.connection.on('stateChange', (oldState, newState) => {
+      console.log(`[voice:${this.guildId}] ${oldState.status} -> ${newState.status}`);
+    });
+    this.connection.on('error', (error) => console.error(`[voice:${this.guildId}]`, error));
   }
 
   public get nowPlaying(): Track | null {
