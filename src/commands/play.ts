@@ -1,4 +1,6 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { musicManager } from '../music/GuildMusicManager.js';
+import { ResolveError, resolveQuery } from '../sources/resolver.js';
 import type { Command } from '../types/Command.js';
 
 export const playCommand: Command = {
@@ -30,9 +32,44 @@ export const playCommand: Command = {
     }
 
     const query = interaction.options.getString('query', true);
-
     await interaction.deferReply();
-    // The playback engine (resolution + queue + voice connection) is wired in the next milestone.
-    await interaction.editReply(`🔎 Received request: \`${query}\``);
+
+    const requestedBy = {
+      id: interaction.user.id,
+      displayName: interaction.member.displayName,
+    };
+
+    let tracks;
+    try {
+      ({ tracks } = await resolveQuery(query, requestedBy));
+    } catch (error) {
+      const message =
+        error instanceof ResolveError
+          ? error.message
+          : 'Could not process that link or search.';
+      await interaction.editReply(message);
+      return;
+    }
+
+    if (tracks.length === 0) {
+      await interaction.editReply('No results found.');
+      return;
+    }
+
+    let player;
+    try {
+      player = await musicManager.getOrCreate(voiceChannel);
+    } catch {
+      await interaction.editReply('I could not join your voice channel.');
+      return;
+    }
+
+    await player.enqueue(...tracks);
+
+    await interaction.editReply(
+      tracks.length === 1
+        ? `Added **${tracks[0].title}** to the queue.`
+        : `Added **${tracks.length}** tracks to the queue.`,
+    );
   },
 };
