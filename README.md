@@ -131,16 +131,35 @@ pnpm deploy-commands   # once
 pnpm dev               # watch mode
 ```
 
-| Script                 | Purpose                                            |
-| ---------------------- | -------------------------------------------------- |
-| `pnpm docker:up`       | Build and start the bot with Docker Compose.       |
-| `pnpm docker:down`     | Stop and remove the container.                     |
-| `pnpm docker:logs`     | Follow the container logs.                          |
-| `pnpm docker:deploy`   | Register slash commands (Docker).                  |
-| `pnpm docker:clear`    | Remove all registered slash commands (Docker).     |
-| `pnpm dev`             | Run natively with hot reload (`tsx watch`).        |
-| `pnpm build`           | Compile TypeScript to `dist/`.                     |
-| `pnpm start`           | Run the compiled bot.                              |
-| `pnpm deploy-commands` | Register slash commands (native).                  |
-| `pnpm clear-commands`  | Remove all registered slash commands (native).     |
-| `pnpm typecheck`       | Type-check without emitting.                       |
+## Scripts
+
+All scripts run with `pnpm <script>`.
+
+### Docker (the usual day-to-day)
+
+These wrap `docker compose` and rely on `COMPOSE_FILE` (see above) to select the right overlay.
+
+- **`docker:up`** — Builds the image (when needed) and starts the bot in the foreground. This is the
+  normal way to run it; stop with `Ctrl+C`. Use it after editing code or the `.env`.
+- **`docker:logs`** — Follows the bot's logs (`-f`). Useful when the container runs in another
+  terminal or detached, e.g. to watch the `[voice:…]` connection lines while testing.
+- **`docker:down`** — Stops and removes the container started by `docker:up`.
+- **`docker:deploy`** — Rebuilds and registers the slash commands with Discord from inside the
+  container. Run it **once after setup and every time you add or change a command**, otherwise the
+  new commands won't appear in Discord.
+- **`docker:clear`** — Rebuilds and removes **all** registered slash commands (global + guild).
+  Handy to wipe stale commands left over from an older version before re-deploying.
+
+### Native development (alternative, without Docker)
+
+- **`dev`** — Runs the bot directly with `tsx watch`, reloading on source changes. Fastest feedback
+  loop while developing (needs the native prerequisites above).
+- **`start`** — Runs the already-compiled bot (`node dist/index.js`); run `build` first.
+- **`deploy-commands`** — Registers the slash commands with Discord, on the host (no container).
+- **`clear-commands`** — Removes all registered slash commands, on the host.
+
+### Build & checks
+
+- **`build`** — Compiles the TypeScript to `dist/` with `tsc`.
+- **`typecheck`** — Type-checks the whole project without emitting files; run it (or rely on your
+  editor) to catch type errors before committing.
