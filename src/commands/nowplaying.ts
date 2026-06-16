@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { resolveActivePlayer } from '../interactions/playerGuard.js';
 import type { Command } from '../types/Command.js';
 import { buildNowPlayingStatusEmbed } from '../ui/panel.js';
@@ -12,6 +12,9 @@ export const nowPlayingCommand: Command = {
     if (!player) {
       return;
     }
-    await interaction.reply({ embeds: [buildNowPlayingStatusEmbed(player)] });
+    await interaction.reply({
+      embeds: [buildNowPlayingStatusEmbed(player)],
+      flags: MessageFlags.Ephemeral,
+    });
   },
 };
