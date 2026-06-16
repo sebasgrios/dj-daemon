@@ -14,7 +14,12 @@
     "start": "node dist/index.js",
     "deploy-commands": "tsx src/deploy-commands.ts",
     "clear-commands": "tsx src/clear-commands.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "docker:up": "docker compose up --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:deploy": "docker compose run --rm --build bot node dist/deploy-commands.js",
+    "docker:clear": "docker compose run --rm --build bot node dist/clear-commands.js"
   },
   "dependencies": {
     "@discordjs/opus": "^0.9.0",

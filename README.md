@@ -73,31 +73,39 @@ The panel buttons mirror the transport controls plus 🔀 shuffle and 🔁 loop.
 4. Invite the bot with the `bot` and `applications.commands` scopes and the **Connect** and
    **Speak** voice permissions.
 
+## The `COMPOSE_FILE` shortcut
+
+The `pnpm docker:*` scripts call `docker compose` directly. On **Docker Desktop (macOS/Windows)**
+Discord's voice UDP needs the host network, so point Compose at both files via your shell (enable
+"host networking" in Docker Desktop settings first):
+
+```bash
+# add to ~/.zshrc / ~/.bashrc
+export COMPOSE_FILE=docker-compose.yml:docker-compose.host.yml
+```
+
+On **Linux** leave `COMPOSE_FILE` unset (the default `docker-compose.yml` works on its own). For the
+hot-reload dev overlay, use `docker-compose.yml:docker-compose.dev.yml` instead.
+
 ## Registering slash commands
 
 Run once (and whenever a command definition changes). With `DISCORD_GUILD_ID` set this is instant;
 otherwise global registration can take up to an hour.
 
 ```bash
-docker compose run --rm --build bot node dist/deploy-commands.js
+pnpm docker:deploy
 ```
 
 ## Running
 
-On Linux the default bridge network is enough. On **Docker Desktop (macOS/Windows)** add the
-host-network overlay so Discord's voice UDP traffic connects (enable "host networking" in Docker
-Desktop settings first).
-
 ```bash
-# Linux
-docker compose up --build
-
-# macOS / Windows (Docker Desktop): use the host network for voice
-docker compose -f docker-compose.yml -f docker-compose.host.yml up --build
-
-# Development with hot reload (tsx watch); combine with host.yml on macOS/Windows
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+pnpm docker:up      # build and start the bot
+pnpm docker:logs    # follow the logs
+pnpm docker:down    # stop and remove the container
 ```
+
+Without the `COMPOSE_FILE` shortcut, pass the files explicitly, e.g.
+`docker compose -f docker-compose.yml -f docker-compose.host.yml up --build`.
 
 ## Running natively (alternative for local dev)
 
@@ -123,11 +131,16 @@ pnpm deploy-commands   # once
 pnpm dev               # watch mode
 ```
 
-| Script                 | Purpose                                  |
-| ---------------------- | ---------------------------------------- |
-| `pnpm dev`             | Run with hot reload (`tsx watch`).       |
-| `pnpm build`           | Compile TypeScript to `dist/`.           |
-| `pnpm start`           | Run the compiled bot.                    |
-| `pnpm deploy-commands` | Register slash commands with Discord.    |
-| `pnpm clear-commands`  | Remove all registered slash commands.    |
-| `pnpm typecheck`       | Type-check without emitting.             |
+| Script                 | Purpose                                            |
+| ---------------------- | -------------------------------------------------- |
+| `pnpm docker:up`       | Build and start the bot with Docker Compose.       |
+| `pnpm docker:down`     | Stop and remove the container.                     |
+| `pnpm docker:logs`     | Follow the container logs.                          |
+| `pnpm docker:deploy`   | Register slash commands (Docker).                  |
+| `pnpm docker:clear`    | Remove all registered slash commands (Docker).     |
+| `pnpm dev`             | Run natively with hot reload (`tsx watch`).        |
+| `pnpm build`           | Compile TypeScript to `dist/`.                     |
+| `pnpm start`           | Run the compiled bot.                              |
+| `pnpm deploy-commands` | Register slash commands (native).                  |
+| `pnpm clear-commands`  | Remove all registered slash commands (native).     |
+| `pnpm typecheck`       | Type-check without emitting.                       |
