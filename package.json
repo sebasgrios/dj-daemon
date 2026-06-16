@@ -13,6 +13,7 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "deploy-commands": "tsx src/deploy-commands.ts",
+    "clear-commands": "tsx src/clear-commands.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
