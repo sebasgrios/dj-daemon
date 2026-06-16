@@ -27,4 +27,6 @@ export const env = {
     clientId: optional('SPOTIFY_CLIENT_ID'),
     clientSecret: optional('SPOTIFY_CLIENT_SECRET'),
   },
+  /** Optional path to a yt-dlp binary; falls back to the one bundled by youtube-dl-exec. */
+  ytDlpPath: optional('YT_DLP_PATH'),
 } as const;

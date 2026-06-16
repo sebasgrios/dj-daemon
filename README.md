@@ -70,12 +70,29 @@ docker compose up --build
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-## Development without Docker
+## Running natively (recommended for local dev on macOS)
 
-Requires Node 22+, pnpm, `ffmpeg`, and Python 3.10+ on the host.
+> **Docker Desktop on macOS/Windows cannot establish Discord's UDP voice connection**, so the bot
+> joins a channel but never starts playing. Deploy with Docker on a **Linux** host (where voice
+> works over the default bridge network), and run **natively** for local development on a Mac.
+
+Requires Node 22+ and pnpm. Install the media tools with Homebrew (the `yt-dlp` formula bundles its
+own Python, avoiding the system Python 3.9):
 
 ```bash
+brew install ffmpeg yt-dlp
 pnpm install
+```
+
+In `.env`, point `YT_DLP_PATH` at the Homebrew binary so the bundled script is not used:
+
+```
+YT_DLP_PATH=/opt/homebrew/bin/yt-dlp   # `which yt-dlp` (Apple Silicon shown)
+```
+
+Then:
+
+```bash
 pnpm deploy-commands   # once
 pnpm dev               # watch mode
 ```

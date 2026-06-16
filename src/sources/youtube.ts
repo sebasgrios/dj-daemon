@@ -1,6 +1,10 @@
 import type { Readable } from 'node:stream';
-import { youtubeDl } from 'youtube-dl-exec';
+import { create, youtubeDl } from 'youtube-dl-exec';
+import { env } from '../config/env.js';
 import type { RequestedBy, Track } from '../music/Track.js';
+
+/** Use a system yt-dlp binary when configured (e.g. native macOS dev); otherwise the bundled one. */
+const ytdlp = env.ytDlpPath ? create(env.ytDlpPath) : youtubeDl;
 
 /** Minimal shape of the yt-dlp JSON we rely on (a single video, search hit, or playlist entry). */
 interface YouTubeEntry {
@@ -50,7 +54,7 @@ function buildTrack(entry: YouTubeEntry, requestedBy: RequestedBy): Track {
 
 /** Spawns yt-dlp to pipe the best audio-only stream to stdout. Fresh process on every call. */
 export async function createYouTubeStream(url: string): Promise<Readable> {
-  const subprocess = youtubeDl.exec(
+  const subprocess = ytdlp.exec(
     url,
     {
       output: '-',
@@ -76,7 +80,7 @@ export async function resolveUrl(url: string, requestedBy: RequestedBy): Promise
   const isPlaylist = /[?&]list=/.test(url);
 
   if (isPlaylist) {
-    const data = (await youtubeDl(url, {
+    const data = (await ytdlp(url, {
       dumpSingleJson: true,
       flatPlaylist: true,
       noWarnings: true,
@@ -86,7 +90,7 @@ export async function resolveUrl(url: string, requestedBy: RequestedBy): Promise
       .map((entry) => buildTrack(entry, requestedBy));
   }
 
-  const data = (await youtubeDl(url, {
+  const data = (await ytdlp(url, {
     dumpSingleJson: true,
     noPlaylist: true,
     noWarnings: true,
@@ -96,7 +100,7 @@ export async function resolveUrl(url: string, requestedBy: RequestedBy): Promise
 
 /** Searches YouTube and returns the top hit as a track, or null when there are no results. */
 export async function searchYouTube(query: string, requestedBy: RequestedBy): Promise<Track | null> {
-  const data = (await youtubeDl(`ytsearch1:${query}`, {
+  const data = (await ytdlp(`ytsearch1:${query}`, {
     dumpSingleJson: true,
     noWarnings: true,
   })) as unknown as YouTubePlaylist;
