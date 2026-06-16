@@ -4,3 +4,8 @@ allowBuilds:
   '@discordjs/opus': true
   esbuild: true
   youtube-dl-exec: true
+
+# Force the transitive `tar` (pulled by @discordjs/node-pre-gyp) onto the patched 7.5.x line.
+# The v6 line is unpatched against several path-traversal/overwrite advisories.
+overrides:
+  tar: '>=7.5.16'
