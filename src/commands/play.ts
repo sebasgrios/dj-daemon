@@ -44,11 +44,12 @@ export const playCommand: Command = {
     try {
       ({ tracks } = await resolveQuery(query, requestedBy));
     } catch (error) {
-      const message =
-        error instanceof ResolveError
-          ? error.message
-          : 'Could not process that link or search.';
-      await interaction.editReply(message);
+      if (error instanceof ResolveError) {
+        await interaction.editReply(error.message);
+        return;
+      }
+      console.error('[play] failed to resolve query:', query, error);
+      await interaction.editReply('Could not process that link or search.');
       return;
     }
 
