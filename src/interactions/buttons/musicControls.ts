@@ -1,5 +1,5 @@
 import { type ButtonInteraction, MessageFlags } from 'discord.js';
-import { musicManager } from '../../music/GuildMusicManager.js';
+import { resolveControllablePlayer } from '../playerGuard.js';
 import { MusicButtonId, buildPanelComponents, buildQueueEmbed } from '../../ui/panel.js';
 
 export function isMusicButton(customId: string): boolean {
@@ -7,25 +7,8 @@ export function isMusicButton(customId: string): boolean {
 }
 
 export async function handleMusicButton(interaction: ButtonInteraction): Promise<void> {
-  if (!interaction.inCachedGuild()) {
-    return;
-  }
-
-  const player = musicManager.get(interaction.guildId);
+  const player = await resolveControllablePlayer(interaction);
   if (!player) {
-    await interaction.reply({
-      content: 'Nothing is playing right now.',
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
-  // Only members in the bot's voice channel may control playback.
-  if (interaction.member.voice.channelId !== player.voiceChannelId) {
-    await interaction.reply({
-      content: 'You must be in my voice channel to control playback.',
-      flags: MessageFlags.Ephemeral,
-    });
     return;
   }
 

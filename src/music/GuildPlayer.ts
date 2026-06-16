@@ -17,6 +17,9 @@ export interface PlayerNotifier {
   onTrackStart(track: Track): void | Promise<void>;
 }
 
+/** Outcome of the "back" control: the current track was restarted, or the previous one resumed. */
+export type BackResult = 'restarted' | 'previous';
+
 /** Above this playback position the "back" control restarts the current track instead of going back. */
 const BACK_RESTART_THRESHOLD_MS = 10_000;
 /** Idle time with an empty queue before the bot leaves the voice channel. */
@@ -97,23 +100,24 @@ export class GuildPlayer {
   /**
    * "Back" control: if the current track has played past the threshold, restart it from the
    * beginning; otherwise jump to the previous track from history, re-queueing the current one so
-   * it plays again right after.
+   * it plays again right after. Returns what it did.
    */
-  public async back(): Promise<void> {
+  public async back(): Promise<BackResult> {
     if (!this.current) {
-      return;
+      return 'restarted';
     }
     if (this.playbackPositionMs > BACK_RESTART_THRESHOLD_MS) {
       await this.start(this.current);
-      return;
+      return 'restarted';
     }
     const previous = this.queue.takePrevious();
     if (!previous) {
       await this.start(this.current);
-      return;
+      return 'restarted';
     }
     this.queue.enqueueNext(this.current);
     await this.start(previous);
+    return 'previous';
   }
 
   /** Stops everything: clears the queue and leaves the voice channel. */

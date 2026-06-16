@@ -19,6 +19,19 @@ through the official Web API, and is controlled with slash commands and an inter
 - Controls are limited to members in the bot's voice channel; the bot leaves automatically when the
   channel empties.
 
+## Commands
+
+Every control is available both as a panel button and as a slash command:
+
+| Command            | Action                                                             |
+| ------------------ | ----------------------------------------------------------------- |
+| `/play <query>`    | Play or queue a YouTube/Spotify URL or a search.                  |
+| `/rewind`          | Restart the current track, or go to the previous one if it just started. |
+| `/skip`, `/next`   | Skip to the next track.                                           |
+| `/pause`           | Pause, or resume if already paused.                              |
+| `/queue`           | Show the current queue.                                          |
+| `/stop`            | Stop, clear the queue and leave the channel.                    |
+
 ## Requirements
 
 - [Docker](https://docs.docker.com/get-docker/) and Docker Compose. That is the only host
