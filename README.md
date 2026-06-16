@@ -25,10 +25,11 @@ Every control is available both as a panel button and as a slash command:
 
 | Command                | Action                                                                   |
 | ---------------------- | ------------------------------------------------------------------------ |
-| `/play <query>`        | Play or queue a YouTube/Spotify URL or a search.                         |
+| `/play [query]`        | Play or queue a URL/search; with no query, resume playback.              |
 | `/rewind`              | Restart the current track, or go to the previous one if it just started. |
 | `/skip`, `/next`       | Skip to the next track.                                                  |
-| `/pause`               | Pause, or resume if already paused.                                     |
+| `/pause`               | Pause playback.                                                         |
+| `/resume`              | Resume playback, or pause if already playing.                           |
 | `/nowplaying`          | Show the current track with a progress bar, volume and loop state.       |
 | `/queue`               | Show the current queue.                                                  |
 | `/loop [off\|track\|queue]` | Set the loop mode (cycles if no mode is given).                     |

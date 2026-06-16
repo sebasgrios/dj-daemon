@@ -6,6 +6,7 @@ import { pauseCommand } from './pause.js';
 import { playCommand } from './play.js';
 import { queueCommand } from './queue.js';
 import { removeCommand } from './remove.js';
+import { resumeCommand } from './resume.js';
 import { rewindCommand } from './rewind.js';
 import { shuffleCommand } from './shuffle.js';
 import { nextCommand, skipCommand } from './skip.js';
@@ -19,6 +20,7 @@ export const commands: readonly Command[] = [
   skipCommand,
   nextCommand,
   pauseCommand,
+  resumeCommand,
   nowPlayingCommand,
   queueCommand,
   loopCommand,

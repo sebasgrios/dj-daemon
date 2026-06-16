@@ -1,22 +1,19 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { resolveControllablePlayer } from '../interactions/playerGuard.js';
 import type { Command } from '../types/Command.js';
 
 export const pauseCommand: Command = {
-  data: new SlashCommandBuilder()
-    .setName('pause')
-    .setDescription('Pause playback, or resume it if already paused.'),
+  data: new SlashCommandBuilder().setName('pause').setDescription('Pause playback.'),
   async execute(interaction) {
     const player = await resolveControllablePlayer(interaction);
     if (!player) {
       return;
     }
     if (player.isPaused) {
-      player.resume();
-      await interaction.reply({ content: '▶️ Resumed.' });
-    } else {
-      player.pause();
-      await interaction.reply({ content: '⏸️ Paused.' });
+      await interaction.reply({ content: '⏸️ Already paused.', flags: MessageFlags.Ephemeral });
+      return;
     }
+    player.pause();
+    await interaction.reply({ content: '⏸️ Paused.' });
   },
 };

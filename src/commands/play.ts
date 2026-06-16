@@ -1,4 +1,5 @@
 import { MessageFlags, SlashCommandBuilder } from 'discord.js';
+import { resolveControllablePlayer } from '../interactions/playerGuard.js';
 import { musicManager } from '../music/GuildMusicManager.js';
 import { ResolveError, resolveQuery } from '../sources/resolver.js';
 import type { Command } from '../types/Command.js';
@@ -7,12 +8,12 @@ import { createPanelNotifier, silentNotifier } from '../ui/panelNotifier.js';
 export const playCommand: Command = {
   data: new SlashCommandBuilder()
     .setName('play')
-    .setDescription('Play a track or add it to the queue (YouTube/Spotify URL or search text).')
+    .setDescription('Play or queue a track, or resume playback when used with no query.')
     .addStringOption((option) =>
       option
         .setName('query')
-        .setDescription('A YouTube/Spotify URL, or text to search on YouTube')
-        .setRequired(true),
+        .setDescription('A YouTube/Spotify URL or search text. Leave empty to resume playback.')
+        .setRequired(false),
     ),
   async execute(interaction) {
     if (!interaction.inCachedGuild()) {
@@ -20,6 +21,23 @@ export const playCommand: Command = {
         content: 'This command can only be used in a server.',
         flags: MessageFlags.Ephemeral,
       });
+      return;
+    }
+
+    const query = interaction.options.getString('query');
+
+    // No query: resume the paused track instead of playing a new one.
+    if (!query) {
+      const player = await resolveControllablePlayer(interaction);
+      if (!player) {
+        return;
+      }
+      if (player.isPaused) {
+        player.resume();
+        await interaction.reply({ content: '▶️ Resumed.' });
+      } else {
+        await interaction.reply({ content: 'Already playing.', flags: MessageFlags.Ephemeral });
+      }
       return;
     }
 
@@ -32,7 +50,6 @@ export const playCommand: Command = {
       return;
     }
 
-    const query = interaction.options.getString('query', true);
     await interaction.deferReply();
 
     const requestedBy = {
