@@ -62,29 +62,33 @@ docker compose run --rm --build bot node dist/deploy-commands.js
 
 ## Running
 
+On Linux the default bridge network is enough. On **Docker Desktop (macOS/Windows)** add the
+host-network overlay so Discord's voice UDP traffic connects (enable "host networking" in Docker
+Desktop settings first).
+
 ```bash
-# Run the bot (production image)
+# Linux
 docker compose up --build
 
-# Development with hot reload (tsx watch) — opt-in overlay
+# macOS / Windows (Docker Desktop): use the host network for voice
+docker compose -f docker-compose.yml -f docker-compose.host.yml up --build
+
+# Development with hot reload (tsx watch); combine with host.yml on macOS/Windows
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
-## Running natively (recommended for local dev on macOS)
+## Running natively (alternative for local dev)
 
-> **Docker Desktop on macOS/Windows cannot establish Discord's UDP voice connection**, so the bot
-> joins a channel but never starts playing. Deploy with Docker on a **Linux** host (where voice
-> works over the default bridge network), and run **natively** for local development on a Mac.
-
-Requires Node 22+ and pnpm. Install the media tools with Homebrew (the `yt-dlp` formula bundles its
-own Python, avoiding the system Python 3.9):
+You can also run without Docker. Requires Node 22+ and pnpm; install the media tools with Homebrew
+(the `yt-dlp` formula bundles its own Python, avoiding the system Python 3.9):
 
 ```bash
 brew install ffmpeg yt-dlp
 pnpm install
 ```
 
-In `.env`, point `YT_DLP_PATH` at the Homebrew binary so the bundled script is not used:
+In `.env`, point `YT_DLP_PATH` at the Homebrew binary (it is ignored automatically inside the Linux
+container, so the same `.env` works for both):
 
 ```
 YT_DLP_PATH=/opt/homebrew/bin/yt-dlp   # `which yt-dlp` (Apple Silicon shown)
@@ -103,4 +107,5 @@ pnpm dev               # watch mode
 | `pnpm build`           | Compile TypeScript to `dist/`.           |
 | `pnpm start`           | Run the compiled bot.                    |
 | `pnpm deploy-commands` | Register slash commands with Discord.    |
+| `pnpm clear-commands`  | Remove all registered slash commands.    |
 | `pnpm typecheck`       | Type-check without emitting.             |
