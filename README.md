@@ -163,3 +163,7 @@ These wrap `docker compose` and rely on `COMPOSE_FILE` (see above) to select the
 - **`build`** — Compiles the TypeScript to `dist/` with `tsc`.
 - **`typecheck`** — Type-checks the whole project without emitting files; run it (or rely on your
   editor) to catch type errors before committing.
+
+## License
+
+Released under the [MIT License](LICENSE).
