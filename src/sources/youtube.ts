@@ -1,10 +1,15 @@
+import { existsSync } from 'node:fs';
 import type { Readable } from 'node:stream';
 import { create, youtubeDl } from 'youtube-dl-exec';
 import { env } from '../config/env.js';
 import type { RequestedBy, Track } from '../music/Track.js';
 
-/** Use a system yt-dlp binary when configured (e.g. native macOS dev); otherwise the bundled one. */
-const ytdlp = env.ytDlpPath ? create(env.ytDlpPath) : youtubeDl;
+/**
+ * Use a system yt-dlp binary when configured and present (e.g. native macOS dev); otherwise fall
+ * back to the one bundled by youtube-dl-exec. The existence check lets the same .env (with a host
+ * path like /opt/homebrew/bin/yt-dlp) be reused inside a Linux container, where it is ignored.
+ */
+const ytdlp = env.ytDlpPath && existsSync(env.ytDlpPath) ? create(env.ytDlpPath) : youtubeDl;
 
 /** Minimal shape of the yt-dlp JSON we rely on (a single video, search hit, or playlist entry). */
 interface YouTubeEntry {
