@@ -12,6 +12,11 @@ import {
 import { Queue } from './Queue.js';
 import type { Track } from './Track.js';
 
+/** Receives playback lifecycle notifications. Implemented by the UI layer to post the panel. */
+export interface PlayerNotifier {
+  onTrackStart(track: Track): void | Promise<void>;
+}
+
 /** Above this playback position the "back" control restarts the current track instead of going back. */
 const BACK_RESTART_THRESHOLD_MS = 10_000;
 /** Idle time with an empty queue before the bot leaves the voice channel. */
@@ -34,6 +39,7 @@ export class GuildPlayer {
   public constructor(
     public readonly guildId: string,
     private readonly connection: VoiceConnection,
+    private readonly notifier: PlayerNotifier,
     private readonly onDestroy: () => void,
   ) {
     this.connection.subscribe(this.player);
@@ -52,6 +58,10 @@ export class GuildPlayer {
 
   public get playbackPositionMs(): number {
     return this.resource?.playbackDuration ?? 0;
+  }
+
+  public get voiceChannelId(): string | null {
+    return this.connection.joinConfig.channelId;
   }
 
   /** Waits until the voice connection is ready, or throws on timeout. */
@@ -127,6 +137,7 @@ export class GuildPlayer {
       this.current = track;
       this.resource = resource;
       this.player.play(resource);
+      void this.notifier.onTrackStart(track);
     } catch (error) {
       console.error(`[player:${this.guildId}] failed to start "${track.title}"`, error);
       // Drop the broken track and try the next one.

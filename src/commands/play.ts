@@ -2,6 +2,7 @@ import { MessageFlags, SlashCommandBuilder } from 'discord.js';
 import { musicManager } from '../music/GuildMusicManager.js';
 import { ResolveError, resolveQuery } from '../sources/resolver.js';
 import type { Command } from '../types/Command.js';
+import { createPanelNotifier, silentNotifier } from '../ui/panelNotifier.js';
 
 export const playCommand: Command = {
   data: new SlashCommandBuilder()
@@ -56,9 +57,13 @@ export const playCommand: Command = {
       return;
     }
 
+    const notifier = interaction.channel?.isSendable()
+      ? createPanelNotifier(interaction.channel)
+      : silentNotifier;
+
     let player;
     try {
-      player = await musicManager.getOrCreate(voiceChannel);
+      player = await musicManager.getOrCreate(voiceChannel, notifier);
     } catch {
       await interaction.editReply('I could not join your voice channel.');
       return;

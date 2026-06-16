@@ -1,6 +1,6 @@
 import { joinVoiceChannel } from '@discordjs/voice';
 import type { VoiceBasedChannel } from 'discord.js';
-import { GuildPlayer } from './GuildPlayer.js';
+import { GuildPlayer, type PlayerNotifier } from './GuildPlayer.js';
 
 /** Owns one {@link GuildPlayer} per guild. Process-wide; all state lives in memory. */
 export class GuildMusicManager {
@@ -11,7 +11,10 @@ export class GuildMusicManager {
   }
 
   /** Returns the guild's player, joining the given voice channel and creating it if needed. */
-  public async getOrCreate(channel: VoiceBasedChannel): Promise<GuildPlayer> {
+  public async getOrCreate(
+    channel: VoiceBasedChannel,
+    notifier: PlayerNotifier,
+  ): Promise<GuildPlayer> {
     const existing = this.players.get(channel.guild.id);
     if (existing) {
       return existing;
@@ -24,7 +27,7 @@ export class GuildMusicManager {
       selfDeaf: true,
     });
 
-    const player = new GuildPlayer(channel.guild.id, connection, () =>
+    const player = new GuildPlayer(channel.guild.id, connection, notifier, () =>
       this.players.delete(channel.guild.id),
     );
     this.players.set(channel.guild.id, player);
